@@ -4,11 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<title>Abfahrtstracker – Testbuild</title>
+<meta name="theme-color" content="#0A0B0D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Abfahrten">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Abfahrten%20Dresden","short_name":"Abfahrten","display":"standalone","background_color":"%230A0B0D","theme_color":"%230A0B0D","start_url":"."}'>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230A0B0D'/><rect x='6' y='7' width='20' height='4' fill='%23FFAF14'/><rect x='6' y='14' width='14' height='4' fill='%23FFAF14'/><rect x='6' y='21' width='17' height='4' fill='%23FFAF14'/></svg>">
+<title>Abfahrten</title>
 <style>
   :root {
     --board: #0A0B0D;
-    --panel: #131519;
     --rule: #24272E;
     --amber: #FFAF14;
     --amber-dim: #8A6415;
@@ -21,345 +26,289 @@
 
   * { box-sizing: border-box; }
 
-  html, body {
-    margin: 0;
-    background: var(--board);
-    color: var(--text);
-  }
+  html { background: var(--board); }
 
   body {
+    margin: 0 auto;
+    max-width: 620px;
+    padding: 0 0 32px;
+    background: var(--board);
+    color: var(--text);
     font-family: var(--mono);
     font-size: 14px;
-    line-height: 1.5;
-    padding: 28px 18px 64px;
-    max-width: 620px;
-    margin-inline: auto;
+    line-height: 1.4;
     -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* ---------- Kopf ---------- */
+  /* ---------- Kopfzeile ---------- */
 
-  .eyebrow {
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--amber-dim);
-    margin: 0 0 10px;
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--board);
+    border-bottom: 1px solid var(--rule);
+    padding: 16px 14px 12px;
+    padding-top: calc(env(safe-area-inset-top) + 16px);
   }
 
-  h1 {
-    font-family: var(--sans);
-    font-size: clamp(30px, 10vw, 44px);
-    font-weight: 800;
-    letter-spacing: -0.035em;
-    line-height: 0.95;
-    text-transform: uppercase;
-    margin: 0 0 14px;
-    color: var(--text);
-  }
-
-  .lede {
-    color: var(--muted);
-    margin: 0 0 30px;
-    font-size: 13px;
-    max-width: 46ch;
-  }
-
-  /* ---------- Prüfschritte ---------- */
-
-  .step {
-    border-top: 1px solid var(--rule);
-    padding: 20px 0;
-  }
-
-  .step-head {
+  .head-row {
     display: flex;
     align-items: baseline;
+    justify-content: space-between;
     gap: 12px;
-    margin-bottom: 6px;
   }
 
-  .idx {
-    flex: none;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--amber);
-    border: 1px solid var(--amber-dim);
-    padding: 2px 6px;
-  }
-
-  .step-title {
+  .place {
     font-family: var(--sans);
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: -0.01em;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--amber-dim);
     margin: 0;
   }
 
-  .step-note {
-    color: var(--muted);
-    font-size: 12.5px;
-    margin: 0 0 14px;
-    padding-left: 40px;
-    max-width: 44ch;
+  .clock {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
   }
 
-  .step-body { padding-left: 40px; }
+  .status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
 
-  button {
+  .status[data-stale] { color: var(--red); }
+
+  .refresh {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--amber);
     background: transparent;
     border: 1px solid var(--amber-dim);
-    padding: 9px 14px;
+    padding: 5px 10px;
     cursor: pointer;
-    transition: background 120ms ease, color 120ms ease;
   }
 
-  button:hover:not(:disabled) { background: var(--amber); color: var(--board); }
-  button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
-  button:disabled { opacity: 0.4; cursor: default; }
+  .refresh:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .refresh:disabled { opacity: 0.4; cursor: default; }
 
-  .result {
-    margin-top: 12px;
-    font-size: 12.5px;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
+  /* ---------- Haltestellenblock ---------- */
 
-  .result:empty { display: none; }
+  .stop { border-bottom: 1px solid var(--rule); }
 
-  .ok   { color: var(--amber); }
-  .fail { color: var(--red); }
-  .wait { color: var(--muted); }
-
-  .hint {
-    color: var(--muted);
+  .stop-name {
+    font-family: var(--sans);
     font-size: 12px;
-    margin-top: 8px;
-    border-left: 2px solid var(--rule);
-    padding-left: 10px;
-  }
-
-  /* ---------- IDs ---------- */
-
-  .ids { list-style: none; margin: 14px 0 0; padding: 0; }
-
-  .ids li {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 7px 0;
-    border-bottom: 1px dotted var(--rule);
-    font-size: 13px;
-  }
-
-  .ids .id-val { color: var(--amber); font-weight: 600; }
-  .ids .id-val[data-empty] { color: var(--muted); font-weight: 400; }
-
-  /* ---------- Anzeigetafel ---------- */
-
-  .board {
-    margin-top: 34px;
-    background: var(--panel);
-    border: 1px solid var(--rule);
-  }
-
-  .board-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 11px 14px;
-    border-bottom: 1px solid var(--rule);
-    font-size: 11px;
+    font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--amber-dim);
+    margin: 0;
+    padding: 16px 14px 10px;
   }
 
-  .board-body { padding: 6px 0; min-height: 96px; }
-
-  .board-empty {
+  .stop-msg {
     color: var(--muted);
     font-size: 12.5px;
-    padding: 26px 14px;
-    text-align: center;
+    padding: 0 14px 16px;
   }
 
-  .dep {
+  .stop-msg[data-error] { color: var(--red); }
+
+  /* ---------- Spalten ---------- */
+
+  .cols {
     display: grid;
-    grid-template-columns: 44px 1fr auto;
-    align-items: center;
-    gap: 12px;
-    padding: 9px 14px;
-    animation: light-up 260ms ease both;
+    grid-template-columns: 1fr 1fr;
+    padding-bottom: 12px;
   }
 
-  .dep-line {
-    font-weight: 700;
-    font-size: 14px;
-    text-align: center;
-    color: var(--board);
-    background: var(--amber);
-    padding: 3px 0;
-  }
+  .col { min-width: 0; }
 
-  .dep-dest {
-    color: var(--text);
-    font-size: 13.5px;
+  .col + .col { border-left: 1px solid var(--rule); }
+
+  .col[data-wide] { grid-column: 1 / -1; }
+
+  .col-head {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 12px 6px 14px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .dep-min {
-    color: var(--amber);
+  /* ---------- Abfahrtszeile ---------- */
+
+  .dep {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
+    padding: 6px 12px 6px 14px;
+  }
+
+  .line {
+    font-size: 12px;
     font-weight: 700;
-    font-size: 15px;
+    text-align: center;
     font-variant-numeric: tabular-nums;
   }
 
-  .dep-min small {
-    color: var(--amber-dim);
+  /* Bahn: gefuellte Flaeche. Bus: nur Kontur. Unterschied ohne zweite Farbe. */
+  .line[data-mot="tram"] {
+    background: var(--amber);
+    color: var(--board);
+    padding: 2px 0;
+  }
+
+  .line[data-mot="bus"] {
+    border: 1px solid var(--amber-dim);
+    color: var(--amber);
+    padding: 1px 0;
+  }
+
+  .dest {
+    font-size: 12px;
+    color: var(--text);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .when {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .mins {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+
+  .unit {
+    font-size: 10px;
     font-weight: 400;
-    font-size: 11px;
-    margin-left: 3px;
-  }
-
-  .stop-label {
-    padding: 14px 14px 4px;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     color: var(--amber-dim);
+    margin-left: 2px;
   }
 
-  @keyframes light-up {
-    from { opacity: 0; transform: translateY(-3px); }
-    to   { opacity: 1; transform: none; }
+  .delay {
+    display: block;
+    font-size: 10px;
+    color: var(--red);
+    letter-spacing: 0.04em;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .dep { animation: none; }
-    button { transition: none; }
-  }
+  /* Zu Fuss nicht mehr erreichbar */
+  .dep[data-unreachable] .mins,
+  .dep[data-unreachable] .dest { color: var(--muted); }
+  .dep[data-unreachable] .line[data-mot="tram"] { background: var(--rule); color: var(--muted); }
+  .dep[data-unreachable] .line[data-mot="bus"] { border-color: var(--rule); color: var(--muted); }
+
+  /* Fahrt faellt aus */
+  .dep[data-cancelled] .dest { text-decoration: line-through; color: var(--muted); }
+  .dep[data-cancelled] .mins { color: var(--red); font-size: 11px; }
 
   footer {
-    margin-top: 30px;
-    padding-top: 16px;
-    border-top: 1px solid var(--rule);
     color: var(--muted);
-    font-size: 11.5px;
-  }
-
-  code {
-    color: var(--amber);
-    background: var(--panel);
-    padding: 1px 4px;
+    font-size: 11px;
+    padding: 16px 14px;
+    text-align: center;
   }
 </style>
 </head>
 <body>
 
-  <p class="eyebrow">Dresden · VVO Departure Monitor</p>
-  <h1>Abfahrts&shy;tracker<br>Testbuild</h1>
-  <p class="lede">Vier Prüfschritte, der Reihe nach. Wenn alle durchlaufen, kann der Tracker rein statisch auf GitHub Pages laufen – ohne Proxy.</p>
-
-  <!-- 01 -->
-  <section class="step">
-    <div class="step-head">
-      <span class="idx">01</span>
-      <h2 class="step-title">Seite wird ausgeliefert</h2>
-    </div>
-    <p class="step-note">Läuft automatisch. Dass du das hier liest, ist bereits der Beweis.</p>
-    <div class="step-body">
-      <p class="result ok" id="r1"></p>
-    </div>
-  </section>
-
-  <!-- 02 -->
-  <section class="step">
-    <div class="step-head">
-      <span class="idx">02</span>
-      <h2 class="step-title">CORS mit application/json</h2>
-    </div>
-    <p class="step-note">Löst einen OPTIONS-Preflight aus. Der saubere Weg – falls die API mitspielt.</p>
-    <div class="step-body">
-      <button id="b2">Test starten</button>
-      <p class="result" id="r2"></p>
-    </div>
-  </section>
-
-  <!-- 03 -->
-  <section class="step">
-    <div class="step-head">
-      <span class="idx">03</span>
-      <h2 class="step-title">CORS mit text/plain</h2>
-    </div>
-    <p class="step-note">Umgeht den Preflight. Der Server dahinter parst den JSON-Body oft trotzdem.</p>
-    <div class="step-body">
-      <button id="b3">Test starten</button>
-      <p class="result" id="r3"></p>
-    </div>
-  </section>
-
-  <!-- 04 -->
-  <section class="step">
-    <div class="step-head">
-      <span class="idx">04</span>
-      <h2 class="step-title">Haltestellen-IDs</h2>
-    </div>
-    <p class="step-note">Sucht die drei Stops über den Pointfinder. Diese IDs trägst du danach fest in den Tracker ein.</p>
-    <div class="step-body">
-      <button id="b4" disabled>Erst 02 oder 03 bestehen</button>
-      <ul class="ids" id="idlist"></ul>
-      <p class="result" id="r4"></p>
-    </div>
-  </section>
-
-  <!-- Tafel -->
-  <div class="board">
-    <div class="board-head">
-      <span>Live-Vorschau</span>
-      <span id="board-clock">--:--</span>
-    </div>
-    <div class="board-body" id="board">
-      <p class="board-empty">Tafel bleibt dunkel, bis Schritt 04 durchgelaufen ist.</p>
-    </div>
+<header>
+  <div class="head-row">
+    <p class="place">Dresden</p>
+    <span class="clock" id="clock">--:--</span>
   </div>
+  <div class="status" id="status">
+    <span id="status-text">Lade …</span>
+    <button class="refresh" id="refresh">Neu laden</button>
+  </div>
+</header>
 
-  <footer>
-    Inoffizielle VVO-Schnittstelle (<code>webapi.vvo-online.de</code>), dokumentiert unter kiliankoe/vvo. Keine Zusage zu Verfügbarkeit oder Stabilität.
-  </footer>
+<main id="board"></main>
+
+<footer>Daten: VVO · inoffizielle Schnittstelle</footer>
 
 <script>
 (function () {
   "use strict";
 
-  var DM         = "https://webapi.vvo-online.de/dm";
-  var POINTFINDER= "https://webapi.vvo-online.de/tr/pointfinder";
-  var PROBE_STOP = "33000742"; // Helmholtzstraße – bekannte ID aus der Doku
-  var STOPS      = ["Tharandter Straße", "Burgkstraße", "Bünaustraße"];
+  /* ===== Einstellungen =================================================
 
-  var contentType = null;  // wird gesetzt, sobald eine Variante besteht
-  var resolved    = [];    // {name, id}
+     id     Haltestellen-ID. Fehlt sie, sucht die Seite beim Start
+            einmal über den Pointfinder und schreibt die gefundene ID
+            in die Konsole – von dort kannst du sie hier eintragen.
+
+     walk   Minuten Fußweg. Abfahrten, die du nicht mehr erreichst,
+            werden ausgegraut statt versteckt. 0 = aus.
+
+     steige Beschriftung der Spalten, nach Steig-Nummer der API.
+            Leer lassen, dann steht dort "Steig 1" / "Steig 2".
+            Beispiel: { "1": "stadtauswärts", "2": "stadteinwärts" }
+
+  ====================================================================== */
+
+  var STOPS = [
+    { name: "Burgkstraße",       id: "33000172", walk: 0, steige: {} },
+    { name: "Tharandter Straße", id: "33000144", walk: 0, steige: {} },
+    { name: "Bünaustraße",       id: "33000145", walk: 0, steige: {} },
+    { name: "Conertplatz",       id: null,       walk: 0, steige: {} }
+  ];
+
+  var LIMIT       = 12;     // Abfahrten pro Haltestelle abrufen
+  var PER_COLUMN  = 4;      // davon je Spalte anzeigen
+  var REFRESH_MS  = 30000;  // Abruf alle 30 s
+  var TICK_MS     = 5000;   // Countdown lokal alle 5 s neu rechnen
+  var STALE_MS    = 90000;  // ab hier gilt die Anzeige als veraltet
+
+  var DM          = "https://webapi.vvo-online.de/dm";
+  var POINTFINDER = "https://webapi.vvo-online.de/tr/pointfinder";
+
+  var state   = STOPS.map(function () { return { deps: [], error: null }; });
+  var lastOk  = null;
+  var loading = false;
 
   function $(id) { return document.getElementById(id); }
 
-  function say(el, text, cls) {
-    el.textContent = text;
-    el.className = "result " + (cls || "");
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
   }
 
-  function post(url, body, ct) {
+  function pad(n) { return String(n).padStart(2, "0"); }
+
+  function post(url, body) {
     return fetch(url, {
       method: "POST",
-      headers: { "Content-Type": ct },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     }).then(function (res) {
       if (!res.ok) throw new Error("HTTP " + res.status);
@@ -370,174 +319,219 @@
   function parseVvoDate(raw) {
     if (!raw) return null;
     var m = /\/Date\((\d+)/.exec(raw);
-    return m ? new Date(parseInt(m[1], 10)) : null;
+    return m ? parseInt(m[1], 10) : null;
   }
 
-  // ---- 01 ----------------------------------------------------------------
-  say($("r1"), "Bestanden · " + location.origin, "ok");
+  /* ---------- IDs nachschlagen ---------- */
 
-  // ---- 02 / 03 -----------------------------------------------------------
-  function corsTest(btn, out, ct) {
-    btn.disabled = true;
-    say(out, "Läuft …", "wait");
-
-    post(DM, { stopid: PROBE_STOP, limit: 3 }, ct)
-      .then(function (data) {
-        var n = (data.Departures || []).length;
-        say(out, "Bestanden · " + n + " Abfahrten gelesen, Content-Type " + ct, "ok");
-        if (!contentType) unlockStep4(ct);
-        btn.disabled = false;
-      })
-      .catch(function (err) {
-        say(out,
-          "Fehlgeschlagen · " + err.message +
-          "\nEin generisches „Failed to fetch\" heißt nur: der Browser hat die Antwort verworfen. " +
-          "Den echten Grund nennt die Konsole (F12 → Console).", "fail");
-        btn.disabled = false;
-      });
-  }
-
-  $("b2").addEventListener("click", function () {
-    corsTest($("b2"), $("r2"), "application/json");
-  });
-
-  $("b3").addEventListener("click", function () {
-    corsTest($("b3"), $("r3"), "text/plain");
-  });
-
-  function unlockStep4(ct) {
-    contentType = ct;
-    var b = $("b4");
-    b.disabled = false;
-    b.textContent = "IDs holen";
-  }
-
-  // ---- 04 ----------------------------------------------------------------
-  function findStop(name) {
-    return post(POINTFINDER, { query: name, stopsOnly: true, limit: 8 }, contentType)
+  function resolveStop(stop, i) {
+    return post(POINTFINDER, { query: stop.name, stopsOnly: true, limit: 8 })
       .then(function (data) {
         var points = data.Points || [];
-        for (var i = 0; i < points.length; i++) {
-          var f = String(points[i]).split("|");
+        for (var k = 0; k < points.length; k++) {
+          var f = String(points[k]).split("|");
           var id = f[0], city = f[2] || "Dresden", label = f[3] || "";
-          // Dresdner Haltestellen beginnen mit 33
           if (id.indexOf("33") === 0 && city === "Dresden") {
-            return { name: name, id: id, label: label };
+            stop.id = id;
+            if (label) stop.name = label;
+            console.info("Haltestelle aufgelöst: " + label + " → " + id +
+                         "  (fest eintragen spart die Suche beim Start)");
+            return;
           }
         }
-        return { name: name, id: null, label: "" };
-      });
-  }
-
-  $("b4").addEventListener("click", function () {
-    var btn = $("b4");
-    btn.disabled = true;
-    say($("r4"), "Suche läuft …", "wait");
-    $("idlist").innerHTML = "";
-
-    Promise.all(STOPS.map(findStop))
-      .then(function (results) {
-        resolved = results;
-        var list = $("idlist");
-
-        results.forEach(function (r) {
-          var li = document.createElement("li");
-          var n  = document.createElement("span");
-          var v  = document.createElement("span");
-          n.textContent = r.label || r.name;
-          v.textContent = r.id || "nicht gefunden";
-          v.className = "id-val";
-          if (!r.id) v.setAttribute("data-empty", "");
-          li.appendChild(n);
-          li.appendChild(v);
-          list.appendChild(li);
-        });
-
-        var hits = results.filter(function (r) { return r.id; });
-        if (hits.length === 3) {
-          say($("r4"), "Alle drei gefunden. Tafel wird geladen …", "ok");
-          loadBoard(hits);
-        } else {
-          say($("r4"), hits.length + " von 3 gefunden. Fehlende Namen im Quelltext anpassen (Konstante STOPS).", "fail");
-          if (hits.length) loadBoard(hits);
-        }
-        btn.disabled = false;
+        state[i].error = "nicht gefunden";
       })
-      .catch(function (err) {
-        say($("r4"), "Fehlgeschlagen · " + err.message, "fail");
-        btn.disabled = false;
-      });
-  });
-
-  // ---- Tafel -------------------------------------------------------------
-  function loadBoard(stops) {
-    Promise.all(stops.map(function (s) {
-      return post(DM, { stopid: s.id, limit: 4 }, contentType)
-        .then(function (d) { return { stop: s, data: d }; })
-        .catch(function () { return { stop: s, data: null }; });
-    })).then(render);
+      .catch(function (err) { state[i].error = err.message; });
   }
 
-  function render(blocks) {
+  function resolveAll() {
+    var open = STOPS.map(function (s, i) { return s.id ? null : resolveStop(s, i); })
+                    .filter(Boolean);
+    return Promise.all(open);
+  }
+
+  /* ---------- Abruf ---------- */
+
+  function fetchStop(stop) {
+    return post(DM, { stopid: stop.id, limit: LIMIT }).then(function (data) {
+      return (data.Departures || []).map(function (d) {
+        var sched = parseVvoDate(d.ScheduledTime);
+        var real  = parseVvoDate(d.RealTime) || sched;
+        return {
+          line:      d.LineName || "?",
+          dest:      d.Direction || "",
+          mot:       d.Mot === "Tram" ? "tram" : "bus",
+          steig:     (d.Platform && d.Platform.Name) ? String(d.Platform.Name) : "",
+          at:        real,
+          delay:     (sched && real) ? Math.round((real - sched) / 60000) : 0,
+          cancelled: d.State === "Cancelled"
+        };
+      }).filter(function (d) { return d.at; });
+    });
+  }
+
+  function load() {
+    if (loading) return;
+    loading = true;
+    $("refresh").disabled = true;
+
+    Promise.all(STOPS.map(function (stop, i) {
+      if (!stop.id) return Promise.resolve();
+      return fetchStop(stop)
+        .then(function (deps) { state[i] = { deps: deps, error: null }; })
+        .catch(function (err) { state[i].error = err.message; });
+    }))
+    .then(function () {
+      if (state.some(function (s) { return !s.error; })) lastOk = Date.now();
+      loading = false;
+      $("refresh").disabled = false;
+      render();
+    });
+  }
+
+  /* ---------- Nach Steig gruppieren ---------- */
+
+  function byPlatform(deps) {
+    var map = {}, keys = [];
+    deps.forEach(function (d) {
+      if (!(d.steig in map)) { map[d.steig] = []; keys.push(d.steig); }
+      map[d.steig].push(d);
+    });
+    keys.sort(function (a, b) {
+      var na = parseInt(a, 10), nb = parseInt(b, 10);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return a < b ? -1 : a > b ? 1 : 0;
+    });
+    return keys.map(function (k) { return { steig: k, deps: map[k] }; });
+  }
+
+  function columnLabel(stop, steig) {
+    if (stop.steige && stop.steige[steig]) return stop.steige[steig];
+    return steig ? "Steig " + steig : "Alle Richtungen";
+  }
+
+  /* ---------- Anzeige ---------- */
+
+  function depRow(d, now, stop) {
+    var mins = Math.round((d.at - now) / 60000);
+    var row  = el("div", "dep");
+
+    if (d.cancelled) row.setAttribute("data-cancelled", "");
+    else if (stop.walk > 0 && mins < stop.walk) row.setAttribute("data-unreachable", "");
+
+    var line = el("span", "line", d.line);
+    line.setAttribute("data-mot", d.mot);
+
+    var when = el("span", "when");
+    if (d.cancelled) {
+      when.appendChild(el("span", "mins", "fällt aus"));
+    } else {
+      var m = el("span", "mins");
+      if (mins === 0) {
+        m.textContent = "jetzt";
+      } else {
+        m.textContent = mins;
+        m.appendChild(el("span", "unit", "min"));
+      }
+      when.appendChild(m);
+      if (d.delay >= 1) when.appendChild(el("span", "delay", "+" + d.delay));
+    }
+
+    row.appendChild(line);
+    row.appendChild(el("span", "dest", d.dest));
+    row.appendChild(when);
+    return row;
+  }
+
+  function render() {
+    var now   = Date.now();
     var board = $("board");
-    board.innerHTML = "";
-    var now = Date.now();
+    board.textContent = "";
 
-    blocks.forEach(function (b) {
-      var label = document.createElement("p");
-      label.className = "stop-label";
-      label.textContent = b.stop.label || b.stop.name;
-      board.appendChild(label);
+    STOPS.forEach(function (stop, i) {
+      var block = el("section", "stop");
+      block.appendChild(el("h2", "stop-name", stop.name));
 
-      var deps = (b.data && b.data.Departures) || [];
-      if (!deps.length) {
-        var none = document.createElement("p");
-        none.className = "board-empty";
-        none.textContent = "Keine Abfahrten";
-        board.appendChild(none);
+      var s = state[i];
+
+      // Fehler nur zeigen, wenn gar nichts mehr da ist. Sonst bleiben
+      // die alten Daten stehen und der Kopf meldet "veraltet".
+      if (s.error && !s.deps.length) {
+        var e = el("p", "stop-msg", "Nicht erreichbar · " + s.error);
+        e.setAttribute("data-error", "");
+        block.appendChild(e);
+        board.appendChild(block);
         return;
       }
 
-      deps.forEach(function (d) {
-        var t = parseVvoDate(d.RealTime || d.ScheduledTime);
-        var mins = t ? Math.max(0, Math.round((t - now) / 60000)) : null;
-
-        var row = document.createElement("div");
-        row.className = "dep";
-
-        var line = document.createElement("span");
-        line.className = "dep-line";
-        line.textContent = d.LineName || "?";
-
-        var dest = document.createElement("span");
-        dest.className = "dep-dest";
-        dest.textContent = d.Direction || "";
-
-        var min = document.createElement("span");
-        min.className = "dep-min";
-        if (mins === null)   min.textContent = "--";
-        else if (mins === 0) min.textContent = "jetzt";
-        else { min.textContent = mins; min.innerHTML += " <small>min</small>"; }
-
-        row.appendChild(line);
-        row.appendChild(dest);
-        row.appendChild(min);
-        board.appendChild(row);
+      var upcoming = s.deps.filter(function (d) {
+        return Math.round((d.at - now) / 60000) >= 0;
       });
+
+      if (!upcoming.length) {
+        block.appendChild(el("p", "stop-msg", "Keine Abfahrten"));
+        board.appendChild(block);
+        return;
+      }
+
+      var groups = byPlatform(upcoming);
+      var cols   = el("div", "cols");
+
+      groups.forEach(function (g) {
+        var col = el("div", "col");
+        // Liefert die API keine Steige, wird eine Spalte über die volle Breite gesetzt
+        if (groups.length === 1) col.setAttribute("data-wide", "");
+        col.appendChild(el("p", "col-head", columnLabel(stop, g.steig)));
+        g.deps.slice(0, PER_COLUMN).forEach(function (d) {
+          col.appendChild(depRow(d, now, stop));
+        });
+        cols.appendChild(col);
+      });
+
+      block.appendChild(cols);
+      board.appendChild(block);
     });
 
-    tick();
+    updateStatus();
   }
 
-  function tick() {
+  function updateStatus() {
     var d = new Date();
-    $("board-clock").textContent =
-      String(d.getHours()).padStart(2, "0") + ":" +
-      String(d.getMinutes()).padStart(2, "0");
+    $("clock").textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
+
+    var status = $("status");
+    var text   = $("status-text");
+
+    if (!lastOk) {
+      status.removeAttribute("data-stale");
+      return;
+    }
+
+    var age = Date.now() - lastOk;
+
+    if (age > STALE_MS) {
+      status.setAttribute("data-stale", "");
+      text.textContent = "Veraltet · Stand " +
+        new Date(lastOk).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    } else {
+      status.removeAttribute("data-stale");
+      text.textContent = age < 10000 ? "Aktuell" : "Aktualisiert vor " + Math.round(age / 1000) + " s";
+    }
   }
 
-  tick();
-  setInterval(tick, 20000);
+  /* ---------- Takt ---------- */
+
+  $("refresh").addEventListener("click", load);
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) load();   // nach Rückkehr aus dem Hintergrund sofort frisch
+  });
+
+  setInterval(load, REFRESH_MS);
+  setInterval(render, TICK_MS);
+
+  $("status-text").textContent = "Suche Haltestellen …";
+  resolveAll().then(load);
 })();
 </script>
 </body>

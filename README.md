@@ -39,6 +39,7 @@ shown per column), `REFRESH_MS`, `STALE_MS`.
 
 ## Caveat
 
-The VVO WebAPI is undocumented and unofficial — reverse-engineered and described
-at [kiliankoe/vvo](https://github.com/kiliankoe/vvo). There is no availability
-or stability guarantee. Fine for a personal board, not something to build on.
+The VVO WebAPI is undocumented and unofficial — reverse-engineered and described at [kiliankoe/vvo](https://github.com/kiliankoe/vvo).
+
+There is no availability or stability guarantee. 
+Fine for a personal board, not something to build on.

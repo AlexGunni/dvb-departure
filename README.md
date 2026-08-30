@@ -11,6 +11,8 @@ phone returning from standby. If a fetch fails, the last known departures stay
 on screen and the header switches to a red "stale" notice with the time of the
 last successful update.
 
+<img width="485" height="412" alt="image" src="https://github.com/user-attachments/assets/8ac69ebc-708a-4a5d-b392-f4ebf336bcd8" />
+
 ## Configuration
 
 Everything adjustable sits in one block at the top of the script in
